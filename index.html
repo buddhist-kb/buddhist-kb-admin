@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buddhist KB Admin</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --gold: #C8960C;
+            --gold-light: #F0C040;
+            --gold-pale: #FDF3DC;
+            --maroon: #6B1A1A;
+            --maroon-dark: #4A0E0E;
+            --cream: #FBF5E6;
+            --text-dark: #2C1810;
+            --border: #D4A853;
+            --green: #2E7D32;
+            --red: #C62828;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* ── Login Screen ── */
+        #loginScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(107,26,26,0.15);
+        }
+
+        .login-card .wheel {
+            font-size: 56px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .login-card h1 {
+            color: var(--maroon);
+            font-size: 1.3rem;
+            margin-bottom: 6px;
+        }
+
+        .login-card p {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 28px;
+        }
+
+        /* ── Header ── */
+        header {
+            background: linear-gradient(135deg, var(--maroon-dark), var(--maroon));
+            color: var(--gold-light);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+        }
+
+        .user-info span {
+            font-size: 0.85rem;
+            color: var(--gold);
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 4px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* ── Main Layout ── */
+        #adminPanel { display: none; }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        /* ── Stats Bar ── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--maroon);
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 18px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: white;
+            color: var(--maroon);
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--maroon);
+            color: var(--gold-light);
+            border-color: var(--maroon);
+        }
+
+        /* ── Panels ── */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ── Form ── */
+        .form-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-card h3 {
+            color: var(--maroon);
+            font-size: 1rem;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--maroon);
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            background: var(--gold-pale);
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--maroon);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--gold);
+            background: var(--maroon);
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin: 16px 0 10px;
+            display: inline-block;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover { opacity: 0.85; }
+
+        .btn-primary {
+            background: var(--maroon);
+            color: var(--gold-light);
+        }
+
+        .btn-success {
+            background: var(--green);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: white;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+        }
+
+        .btn-edit {
+            background: var(--gold);
+            color: var(--maroon-dark);
+            padding: 6px 14px;
+            font-size: 0.8rem;
+        }
+
+        /* ── Q&A List ── */
+        .qa-item {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .qa-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .qa-question {
+            font-weight: 600;
+            color: var(--maroon);
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .qa-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: 10px;
+        }
+
+        .qa-answer {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            padding: 8px;
+            background: var(--gold-pale);
+            border-radius: 6px;
+            border-left: 3px solid var(--gold);
+        }
+
+        .qa-meta {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .status-verified {
+            background: #E8F5E9;
+            color: var(--green);
+        }
+
+        .status-draft {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        /* ── Alert ── */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .alert-success {
+            background: #E8F5E9;
+            color: var(--green);
+            border: 1px solid #A5D6A7;
+        }
+
+        .alert-error {
+            background: #FFEBEE;
+            color: var(--red);
+            border: 1px solid #EF9A9A;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+    <div class="login-card">
+        <span class="wheel">☸</span>
+        <h1>Buddhist KB Admin</h1>
+        <p>Sign in with your Google account to manage the Tipitaka Knowledge Base</p>
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID"
+             data-callback="handleGoogleLogin"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-size="large"
+             data-theme="outline"
+             data-text="sign_in_with"
+             data-shape="rectangular"
+             data-logo_alignment="left">
+        </div>
+    </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel">
+
+    <header>
+        <h1>☸ Buddhist KB Admin</h1>
+        <div class="user-info">
+            <img id="userPhoto" src="" alt="">
+            <span id="userName"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Alert -->
+        <div class="alert" id="alertBox"></div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="number" id="statQuestions">-</div>
+                <div class="label">Questions</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statAnswers">-</div>
+                <div class="label">Answers</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statSuttas">-</div>
+                <div class="label">Suttas</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statTopics">-</div>
+                <div class="label">Topics</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('addQA', this)">➕ Add Q&A</button>
+            <button class="tab-btn" onclick="showTab('browseQA', this)">📚 Browse Q&A</button>
+        </div>
+
+        <!-- Add Q&A Panel -->
+        <div class="panel active" id="addQA">
+            <div class="form-card">
+                <h3>➕ Add New Question & Answer</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sutta</label>
+                        <select id="suttaSelect">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Topic</label>
+                        <select id="topicSelect">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Source Reference (e.g. SN 56.11)</label>
+                    <input type="text" id="sourceRef" placeholder="e.g. DN 1.1">
+                </div>
+
+                <span class="section-title">QUESTION</span>
+
+                <div class="form-group">
+                    <label>සිංහල ප්‍රශ්නය</label>
+                    <textarea id="qSinhala" placeholder="සිංහලෙන් ප්‍රශ්නය ඇතුළු කරන්න..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>English Question</label>
+                    <textarea id="qEnglish" placeholder="Enter question in English..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Pāli Question</label>
+                    <textarea id="qPali" placeholder="Pāli pañha..."></textarea>
+                </div>
+
+                <span class="section-title">ANSWER</span>
+
+                <div class="form-group">
+                    <label>සිංහල පිළිතුර</label>
+                    <textarea id="aSinhala" placeholder="සිංහලෙන් පිළිතුර ඇතුළු කරන්න..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>English Answer</label>
+                    <textarea id="aEnglish" placeholder="Enter answer in English..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Pāli Answer</label>
+                    <textarea id="aPali" placeholder="Pāli vissajjana..."></textarea>
+                </div>
+
+                <button class="btn btn-success" onclick="submitQA()">
+                    ✅ Save Q&A to Database
+                </button>
+            </div>
+        </div>
+
+        <!-- Browse Q&A Panel -->
+        <div class="panel" id="browseQA">
+            <div id="qaList">
+                <p style="color:#888; text-align:center; padding:20px;">Loading...</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://buddhist-philosophy-kb-2.onrender.com';
+    let authToken = null;
+
+    // ── Google Login ──
+    function handleGoogleLogin(response) {
+        authToken = response.credential;
+
+        // Decode token to get user info
+        const payload = JSON.parse(atob(authToken.split('.')[1]));
+
+        document.getElementById('userName').textContent = payload.name;
+        document.getElementById('userPhoto').src = payload.picture;
+
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+
+        loadStats();
+        loadSuttas();
+        loadTopics();
+        loadQAList();
+    }
+
+    function logout() {
+        authToken = null;
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('adminPanel').style.display = 'none';
+    }
+
+    // ── Auth Header ──
+    function authHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+        };
+    }
+
+    // ── Load Stats ──
+    async function loadStats() {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/stats`,
+                { headers: authHeaders() });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('statQuestions').textContent = data.data.questions;
+                document.getElementById('statAnswers').textContent = data.data.answers;
+                document.getElementById('statSuttas').textContent = data.data.suttas;
+                document.getElementById('statTopics').textContent = data.data.topics;
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // ── Load Suttas ──
+    async function loadSuttas() {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/suttas`,
+                { headers: authHeaders() });
+            const data = await res.json();
+            const select = document.getElementById('suttaSelect');
+            select.innerHTML = '<option value="">Select Sutta...</option>';
+            data.data.forEach(s => {
+                select.innerHTML += `<option value="${s.id}">
+                    ${s.reference} - ${s.name_english}
+                </option>`;
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    // ── Load Topics ──
+    async function loadTopics() {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/topics`,
+                { headers: authHeaders() });
+            const data = await res.json();
+            const select = document.getElementById('topicSelect');
+            select.innerHTML = '<option value="">Select Topic...</option>';
+            data.data.forEach(t => {
+                select.innerHTML += `<option value="${t.id}">
+                    ${t.name_english} | ${t.name_sinhala}
+                </option>`;
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    // ── Load Q&A List ──
+    async function loadQAList() {
+        try {
+            const res = await fetch(`${API_URL}/api/questions`,
+                { headers: authHeaders() });
+            const data = await res.json();
+            const list = document.getElementById('qaList');
+
+            if (!data.data.length) {
+                list.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No Q&A found</p>';
+                return;
+            }
+
+            list.innerHTML = data.data.map(q => `
+                <div class="qa-item">
+                    <div class="qa-item-header">
+                        <div class="qa-question">${q.text.sinhala || q.text.english}</div>
+                        <div class="qa-actions">
+                            <button class="btn btn-danger"
+                                onclick="deleteQuestion('${q.id}')">🗑</button>
+                        </div>
+                    </div>
+                    <div class="qa-meta">
+                        📚 ${q.topic || 'No topic'} &nbsp;|&nbsp;
+                        <span class="status-badge status-verified">verified</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    // ── Submit Q&A ──
+    async function submitQA() {
+        const body = {
+            question_sinhala: document.getElementById('qSinhala').value,
+            question_english: document.getElementById('qEnglish').value,
+            question_pali: document.getElementById('qPali').value,
+            answer_sinhala: document.getElementById('aSinhala').value,
+            answer_english: document.getElementById('aEnglish').value,
+            answer_pali: document.getElementById('aPali').value,
+            source_reference: document.getElementById('sourceRef').value,
+            sutta_id: document.getElementById('suttaSelect').value,
+            topic_id: document.getElementById('topicSelect').value
+        };
+
+        if (!body.question_sinhala || !body.answer_sinhala || !body.sutta_id || !body.topic_id) {
+            showAlert('Please fill in Sinhala question, answer, sutta, and topic.', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/qa`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                showAlert('✅ Q&A saved successfully!', 'success');
+                clearForm();
+                loadStats();
+                loadQAList();
+            } else {
+                showAlert('❌ Error: ' + data.error, 'error');
+            }
+        } catch (e) {
+            showAlert('❌ Connection error', 'error');
+        }
+    }
+
+    // ── Delete Question ──
+    async function deleteQuestion(id) {
+        if (!confirm('Delete this question and all its answers?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admin/question/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            const data = await res.json();
+            if (data.success) {
+                showAlert('✅ Question deleted', 'success');
+                loadStats();
+                loadQAList();
+            }
+        } catch (e) {
+            showAlert('❌ Error deleting question', 'error');
+        }
+    }
+
+    // ── Tab Switching ──
+    function showTab(tabId, btn) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        if (tabId === 'browseQA') loadQAList();
+    }
+
+    // ── Alert ──
+    function showAlert(message, type) {
+        const box = document.getElementById('alertBox');
+        box.textContent = message;
+        box.className = `alert alert-${type}`;
+        box.style.display = 'block';
+        setTimeout(() => box.style.display = 'none', 4000);
+    }
+
+    // ── Clear Form ──
+    function clearForm() {
+        ['qSinhala','qEnglish','qPali','aSinhala','aEnglish','aPali','sourceRef'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('suttaSelect').selectedIndex = 0;
+        document.getElementById('topicSelect').selectedIndex = 0;
+    }
+</script>
+</body>
+</html>
