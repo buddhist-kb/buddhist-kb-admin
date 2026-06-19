@@ -432,8 +432,9 @@
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('addQA', this)">➕ Add Q&A</button>
-            <button class="tab-btn" onclick="showTab('browseQA', this)">📚 Browse Q&A</button>
+           <button class="tab-btn active" onclick="showTab('addQA', this)">➕ Add Q&A</button>
+           <button class="tab-btn" onclick="showTab('browseQA', this)">📚 Browse Q&A</button>
+           <button class="tab-btn" onclick="showTab('linkQA', this)">🔗 Link Related</button>
         </div>
 
         <!-- Add Q&A Panel -->
@@ -600,6 +601,38 @@
             </div>
         </div>
 
+        <!-- Link Related Questions Panel -->
+<div class="panel" id="linkQA">
+    <div class="form-card">
+        <h3>🔗 Link Two Questions as Related</h3>
+        <p style="font-size:0.85rem; color:#888; margin-bottom:16px;">
+            When users view one question's answer, the linked question will be suggested too.
+        </p>
+
+        <div class="form-group">
+            <label>First Question</label>
+            <select id="linkQuestion1">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Second Question</label>
+            <select id="linkQuestion2">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Relation Strength (0.1 - 1.0)</label>
+            <input type="number" id="linkStrength" value="0.8" min="0.1" max="1.0" step="0.1">
+        </div>
+
+        <button class="btn btn-success" onclick="submitLink()">🔗 Create Link</button>
+    </div>
+</div>
+
+        
     </div>
 </div>
 
@@ -934,13 +967,65 @@
         }
     }
 
+    // ── Link Related Questions ──
+async function loadAllQuestionsForLinking() {
+    try {
+        const res = await fetch(`${API_URL}/api/admin/all-questions`,
+            { headers: authHeaders() });
+        const data = await res.json();
+
+        const opts = data.data.map(q =>
+            `<option value="${q.id}">${q.text_english}</option>`
+        ).join('');
+
+        document.getElementById('linkQuestion1').innerHTML =
+            '<option value="">Select question...</option>' + opts;
+        document.getElementById('linkQuestion2').innerHTML =
+            '<option value="">Select question...</option>' + opts;
+    } catch (e) { console.error(e); }
+}
+
+async function submitLink() {
+    const q1 = document.getElementById('linkQuestion1').value;
+    const q2 = document.getElementById('linkQuestion2').value;
+    const strength = parseFloat(document.getElementById('linkStrength').value);
+
+    if (!q1 || !q2) {
+        showAlert('Please select both questions.', 'error');
+        return;
+    }
+    if (q1 === q2) {
+        showAlert('Please select two different questions.', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/admin/link-similar`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ question_id_1: q1, question_id_2: q2, strength })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showAlert('✅ Questions linked successfully!', 'success');
+        } else {
+            showAlert('❌ Error: ' + data.error, 'error');
+        }
+    } catch (e) {
+        showAlert('❌ Connection error', 'error');
+    }
+}
+
+    
     // ── Tab Switching ──
     function showTab(tabId, btn) {
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        btn.classList.add('active');
-        if (tabId === 'browseQA') loadQAList();
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+    if (tabId === 'browseQA') loadQAList();
+    if (tabId === 'linkQA') loadAllQuestionsForLinking();
     }
 
     // ── Alert ──
