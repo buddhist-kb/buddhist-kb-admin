@@ -552,6 +552,46 @@
         </div>
     </div>
 </div>
+
+        <!-- Add Answer Modal -->
+        <div id="addAnswerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; overflow-y:auto;">
+            <div style="background:white; max-width:600px; margin:30px auto; border-radius:12px; padding:20px; border:2px solid var(--border);">
+                <h3 style="color:var(--maroon); margin-bottom:6px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+                    ➕ Add Another Answer
+                </h3>
+                <p id="addAnswerQuestionText" style="font-size:0.85rem; color:#888; margin-bottom:16px;"></p>
+        
+                <div class="form-group">
+                    <label>Sutta (source of this new answer)</label>
+                    <select id="newAnswerSutta">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+        
+                <div class="form-group">
+                    <label>Source Reference</label>
+                    <input type="text" id="newAnswerSourceRef" placeholder="e.g. MN 9">
+                </div>
+        
+                <div class="form-group">
+                    <label>සිංහල පිළිතුර</label>
+                    <textarea id="newAnswerSinhala"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>English Answer</label>
+                    <textarea id="newAnswerEnglish"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Pāli Answer</label>
+                    <textarea id="newAnswerPali"></textarea>
+                </div>
+        
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn btn-success" onclick="saveNewAnswer()">💾 Add Answer</button>
+                    <button class="btn" style="background:#888; color:white;" onclick="closeAddAnswerModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
         
         <!-- Browse Q&A Panel -->
         <div class="panel" id="browseQA">
@@ -660,26 +700,29 @@
                 return;
             }
 
-            list.innerHTML = data.data.map(q => `
-    <div class="qa-item">
-        <div class="qa-item-header">
-            <div class="qa-question">${q.text.sinhala || q.text.english}</div>
-            <div class="qa-actions">
-                <button class="btn btn-edit"
-                    onclick='openEditModal(${JSON.stringify(q).replace(/'/g, "&apos;")})'>✏️</button>
-                <button class="btn btn-danger"
-                    onclick="deleteQuestion('${q.id}')">🗑</button>
-            </div>
-        </div>
-        <div class="qa-meta">
-            📚 ${q.topic || 'No topic'} &nbsp;|&nbsp;
-            <span class="status-badge status-verified">verified</span>
-        </div>
-    </div>
-`).join('');
-        } catch (e) { console.error(e); }
-    }
 
+            
+            list.innerHTML = data.data.map(q => `
+                <div class="qa-item">
+                    <div class="qa-item-header">
+                        <div class="qa-question">${q.text.sinhala || q.text.english}</div>
+                        <div class="qa-actions">
+                            <button class="btn btn-edit" style="background:var(--green); color:white;"
+                                onclick='openAddAnswerModal(${JSON.stringify(q).replace(/'/g, "&apos;")})'>➕</button>
+                            <button class="btn btn-edit"
+                                onclick='openEditModal(${JSON.stringify(q).replace(/'/g, "&apos;")})'>✏️</button>
+                            <button class="btn btn-danger"
+                                onclick="deleteQuestion('${q.id}')">🗑</button>
+                        </div>
+                    </div>
+                    <div class="qa-meta">
+                        📚 ${q.topic || 'No topic'} &nbsp;|&nbsp;
+                        <span class="status-badge status-verified">${(q.answers||[]).length} answer(s)</span>
+                    </div>
+                </div>
+            `).join('');
+
+            
     // ── Submit Q&A ──
     async function submitQA() {
         const body = {
@@ -799,7 +842,76 @@ async function saveEdit() {
     }
 }
 
-    
+
+    // ── Add Another Answer ──
+        let currentAddAnswerQuestion = null;
+        
+        async function openAddAnswerModal(question) {
+            currentAddAnswerQuestion = question;
+            document.getElementById('addAnswerQuestionText').textContent =
+                'For: ' + (question.text.english || question.text.sinhala);
+        
+            // Populate sutta dropdown if not already loaded
+            const select = document.getElementById('newAnswerSutta');
+            if (select.options.length <= 1) {
+                try {
+                    const res = await fetch(`${API_URL}/api/admin/suttas`, { headers: authHeaders() });
+                    const data = await res.json();
+                    select.innerHTML = '<option value="">Select Sutta...</option>' +
+                        data.data.map(s => `<option value="${s.id}">${s.reference} - ${s.name_english}</option>`).join('');
+                } catch (e) { console.error(e); }
+            }
+        
+            document.getElementById('newAnswerSourceRef').value = '';
+            document.getElementById('newAnswerSinhala').value = '';
+            document.getElementById('newAnswerEnglish').value = '';
+            document.getElementById('newAnswerPali').value = '';
+        
+            document.getElementById('addAnswerModal').style.display = 'block';
+        }
+        
+        function closeAddAnswerModal() {
+            document.getElementById('addAnswerModal').style.display = 'none';
+            currentAddAnswerQuestion = null;
+        }
+        
+        async function saveNewAnswer() {
+            if (!currentAddAnswerQuestion) return;
+        
+            const body = {
+                question_id: currentAddAnswerQuestion.id,
+                sutta_id: document.getElementById('newAnswerSutta').value,
+                source_reference: document.getElementById('newAnswerSourceRef').value,
+                answer_sinhala: document.getElementById('newAnswerSinhala').value,
+                answer_english: document.getElementById('newAnswerEnglish').value,
+                answer_pali: document.getElementById('newAnswerPali').value
+            };
+        
+            if (!body.sutta_id || !body.answer_sinhala) {
+                showAlert('Please select a Sutta and enter at least the Sinhala answer.', 'error');
+                return;
+            }
+        
+            try {
+                const res = await fetch(`${API_URL}/api/admin/answer-to-question`, {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+        
+                if (data.success) {
+                    showAlert('✅ Answer added to question!', 'success');
+                    closeAddAnswerModal();
+                    loadQAList();
+                } else {
+                    showAlert('❌ Error: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Connection error', 'error');
+            }
+        }
+                    
     // ── Delete Question ──
     async function deleteQuestion(id) {
         if (!confirm('Delete this question and all its answers?')) return;
