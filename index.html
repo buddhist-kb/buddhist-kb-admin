@@ -736,24 +736,36 @@
 
             
             list.innerHTML = data.data.map(q => `
-                <div class="qa-item">
-                    <div class="qa-item-header">
-                        <div class="qa-question">${q.text.sinhala || q.text.english}</div>
-                        <div class="qa-actions">
-                            <button class="btn btn-edit" style="background:var(--green); color:white;"
-                                onclick='openAddAnswerModal(${JSON.stringify(q).replace(/'/g, "&apos;")})'>➕</button>
-                            <button class="btn btn-edit"
-                                onclick='openEditModal(${JSON.stringify(q).replace(/'/g, "&apos;")})'>✏️</button>
-                            <button class="btn btn-danger"
-                                onclick="deleteQuestion('${q.id}')">🗑</button>
-                        </div>
+    <div class="qa-item">
+        <div class="qa-item-header">
+            <div class="qa-question">${q.text.sinhala || q.text.english}</div>
+            <div class="qa-actions">
+                <button class="btn btn-edit" style="background:var(--green); color:white;"
+                    onclick='openAddAnswerModal(${JSON.stringify(q).replace(/'/g, "&apos;")})'>➕</button>
+                <button class="btn btn-edit"
+                    onclick='openEditQuestionModal(${JSON.stringify(q).replace(/'/g, "&apos;")})'>✏️ Q</button>
+                <button class="btn btn-danger"
+                    onclick="deleteQuestion('${q.id}')">🗑</button>
+            </div>
+        </div>
+        <div class="qa-meta">
+            📚 ${q.topic || 'No topic'} &nbsp;|&nbsp;
+            <span class="status-badge status-verified">${(q.answers||[]).length} answer(s)</span>
+        </div>
+        <div style="margin-top:10px;">
+            ${(q.answers||[]).map((a, i) => `
+                <div style="background:var(--gold-pale); border-left:3px solid var(--gold); border-radius:0 6px 6px 0; padding:8px 10px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="flex:1; font-size:0.83rem; color:var(--text-dark);">
+                        <strong style="color:var(--maroon); font-size:0.75rem;">පිළිතුර ${i + 1}</strong><br>
+                        ${a.text_sinhala || a.text_english || ''}
                     </div>
-                    <div class="qa-meta">
-                        📚 ${q.topic || 'No topic'} &nbsp;|&nbsp;
-                        <span class="status-badge status-verified">${(q.answers||[]).length} answer(s)</span>
-                    </div>
+                    <button class="btn btn-edit" style="margin-left:8px; padding:4px 10px; font-size:0.75rem;"
+                        onclick='openEditAnswerModal(${JSON.stringify(a).replace(/'/g, "&apos;")})'>✏️ A</button>
                 </div>
-            `).join('');
+            `).join('')}
+        </div>
+    </div>
+`).join('');
           } catch (e) { console.error(e); }
     }
 
