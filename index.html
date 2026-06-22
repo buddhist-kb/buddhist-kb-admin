@@ -812,83 +812,103 @@
     }
 
     // ── Edit Modal ──
-    let currentEditQuestion = null;
-    
-    async function openEditModal(question) {
-        currentEditQuestion = question;
-    
-        // Fetch the full answer details for this question
-        try {
-            const res = await fetch(`${API_URL}/api/answers/${question.id}`,
-                { headers: authHeaders() });
-            const data = await res.json();
-            const answer = data.data[0] || {};
-    
-            document.getElementById('editQSinhala').value = question.text.sinhala || '';
-            document.getElementById('editQEnglish').value = question.text.english || '';
-            document.getElementById('editQPali').value = question.text.pali || '';
-    
-            document.getElementById('editASinhala').value = answer.text?.sinhala || '';
-            document.getElementById('editAEnglish').value = answer.text?.english || '';
-            document.getElementById('editAPali').value = answer.text?.pali || '';
-            document.getElementById('editSourceRef').value = answer.source_reference || '';
-            document.getElementById('editStatus').value = answer.status || 'verified';
-    
-            currentEditQuestion.answerId = answer.id;
-    
-            document.getElementById('editModal').style.display = 'block';
-        } catch (e) {
-            showAlert('❌ Error loading answer details', 'error');
-        }
-    }
-    
-    function closeEditModal() {
-        document.getElementById('editModal').style.display = 'none';
-        currentEditQuestion = null;
-    }
-    
-    async function saveEdit() {
-        if (!currentEditQuestion) return;
-    
-        const questionBody = {
-            text_sinhala: document.getElementById('editQSinhala').value,
-            text_english: document.getElementById('editQEnglish').value,
-            text_pali: document.getElementById('editQPali').value
-        };
-    
-        const answerBody = {
-            text_sinhala: document.getElementById('editASinhala').value,
-            text_english: document.getElementById('editAEnglish').value,
-            text_pali: document.getElementById('editAPali').value,
-            source_reference: document.getElementById('editSourceRef').value,
-            confidence: 0.9,
-            status: document.getElementById('editStatus').value
-        };
-    
-        try {
-            // Update question
+// ── Edit Question Modal ──
+let currentEditQuestion = null;
+
+async function openEditQuestionModal(question) {
+    currentEditQuestion = question;
+
+    document.getElementById('editQSinhala').value = question.text.sinhala || '';
+    document.getElementById('editQEnglish').value = question.text.english || '';
+    document.getElementById('editQPali').value = question.text.pali || '';
+
+    // Hide answer fields — question only
+    document.getElementById('editAnswerSection').style.display = 'none';
+    document.getElementById('editModalTitle').textContent = '✏️ Edit Question';
+
+    document.getElementById('editModal').style.display = 'block';
+}
+
+// ── Edit Answer Modal ──
+let currentEditAnswer = null;
+
+async function openEditAnswerModal(answer) {
+    currentEditAnswer = answer;
+    currentEditQuestion = null;
+
+    // Clear question fields
+    document.getElementById('editQSinhala').value = '';
+    document.getElementById('editQEnglish').value = '';
+    document.getElementById('editQPali').value = '';
+
+    // Fill answer fields
+    document.getElementById('editASinhala').value = answer.text_sinhala || '';
+    document.getElementById('editAEnglish').value = answer.text_english || '';
+    document.getElementById('editAPali').value = answer.text_pali || '';
+    document.getElementById('editSourceRef').value = answer.source_reference || '';
+    document.getElementById('editStatus').value = answer.status || 'verified';
+
+    // Show answer fields only
+    document.getElementById('editAnswerSection').style.display = 'block';
+    document.getElementById('editQuestionSection').style.display = 'none';
+    document.getElementById('editModalTitle').textContent = '✏️ Edit Answer';
+
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    document.getElementById('editAnswerSection').style.display = 'block';
+    document.getElementById('editQuestionSection').style.display = 'block';
+    currentEditQuestion = null;
+    currentEditAnswer = null;
+}
+
+async function saveEdit() {
+    try {
+        // Saving question only
+        if (currentEditQuestion && !currentEditAnswer) {
+            const questionBody = {
+                text_sinhala: document.getElementById('editQSinhala').value,
+                text_english: document.getElementById('editQEnglish').value,
+                text_pali: document.getElementById('editQPali').value
+            };
+
             await fetch(`${API_URL}/api/admin/question/${currentEditQuestion.id}`, {
                 method: 'PUT',
                 headers: authHeaders(),
                 body: JSON.stringify(questionBody)
             });
-    
-            // Update answer if it exists
-            if (currentEditQuestion.answerId) {
-                await fetch(`${API_URL}/api/admin/answer/${currentEditQuestion.answerId}`, {
-                    method: 'PUT',
-                    headers: authHeaders(),
-                    body: JSON.stringify(answerBody)
-                });
-            }
-    
-            showAlert('✅ Q&A updated successfully!', 'success');
-            closeEditModal();
-            loadQAList();
-        } catch (e) {
-            showAlert('❌ Error saving changes', 'error');
+
+            showAlert('✅ Question updated!', 'success');
         }
+
+        // Saving answer only
+        if (currentEditAnswer && !currentEditQuestion) {
+            const answerBody = {
+                text_sinhala: document.getElementById('editASinhala').value,
+                text_english: document.getElementById('editAEnglish').value,
+                text_pali: document.getElementById('editAPali').value,
+                source_reference: document.getElementById('editSourceRef').value,
+                confidence: 0.9,
+                status: document.getElementById('editStatus').value
+            };
+
+            await fetch(`${API_URL}/api/admin/answer/${currentEditAnswer.id}`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify(answerBody)
+            });
+
+            showAlert('✅ Answer updated!', 'success');
+        }
+
+        closeEditModal();
+        loadQAList();
+    } catch (e) {
+        showAlert('❌ Error saving changes', 'error');
     }
+}
 
 
     // ── Add Another Answer ──
