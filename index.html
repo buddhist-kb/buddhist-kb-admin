@@ -505,47 +505,52 @@
                      ✏️ Edit
                 </h3>
         
-                <span class="section-title">QUESTION</span>
-                <div class="form-group">
-                    <label>සිංහල ප්‍රශ්නය</label>
-                    <textarea id="editQSinhala"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>English Question</label>
-                    <textarea id="editQEnglish"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Pāli Question</label>
-                    <textarea id="editQPali"></textarea>
-                </div>
+                <div id="editQuestionSection">
+    <span class="section-title">QUESTION</span>
+    <div class="form-group">
+        <label>සිංහල ප්‍රශ්නය</label>
+        <textarea id="editQSinhala"></textarea>
+    </div>
+    <div class="form-group">
+        <label>English Question</label>
+        <textarea id="editQEnglish"></textarea>
+    </div>
+    <div class="form-group">
+        <label>Pāli Question</label>
+        <textarea id="editQPali"></textarea>
+    </div>
+</div>
+                
         
-                <span class="section-title">ANSWER</span>
-                <div class="form-group">
-                    <label>සිංහල පිළිතුර</label>
-                    <textarea id="editASinhala"></textarea>
+                <div id="editAnswerSection">
+    <span class="section-title">ANSWER</span>
+    <div class="form-group">
+        <label>සිංහල පිළිතුර</label>
+        <textarea id="editASinhala"></textarea>
+    </div>
+    <div class="form-group">
+        <label>English Answer</label>
+        <textarea id="editAEnglish"></textarea>
+    </div>
+    <div class="form-group">
+        <label>Pāli Answer</label>
+        <textarea id="editAPali"></textarea>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Source Reference</label>
+            <input type="text" id="editSourceRef">
+        </div>
+        <div class="form-group">
+            <label>Status</label>
+            <select id="editStatus">
+                <option value="verified">Verified</option>
+                <option value="draft">Draft</option>
+            </select>
+        </div>
+    </div>
                 </div>
-                <div class="form-group">
-                    <label>English Answer</label>
-                    <textarea id="editAEnglish"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Pāli Answer</label>
-                    <textarea id="editAPali"></textarea>
-                </div>
-        
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Source Reference</label>
-                        <input type="text" id="editSourceRef">
-                    </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select id="editStatus">
-                            <option value="verified">Verified</option>
-                            <option value="draft">Draft</option>
-                        </select>
-                    </div>
-                </div>
+                
         
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button class="btn btn-success" onclick="saveEdit()">💾 Save Changes</button>
